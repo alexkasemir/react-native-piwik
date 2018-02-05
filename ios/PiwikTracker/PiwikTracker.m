@@ -221,23 +221,21 @@ static PiwikTracker *_sharedInstance;
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
-
 + (instancetype)sharedInstanceWithSiteID:(NSString*)siteID baseURL:(NSURL*)baseURL {
-  
-  // Make sure the base url is correct
+
   NSString *lastPathComponent = [baseURL lastPathComponent];
-  if ([lastPathComponent isEqualToString:@"piwik.php"] || [lastPathComponent isEqualToString:@"piwik-proxy.php"]) {
-    baseURL = [baseURL URLByDeletingLastPathComponent];
+  if (lastPathComponent && lastPathComponent.length) {
+    baseURL = [baseURL URLByDeletingLastPathComponent];  
   }
-  
-  return [self sharedInstanceWithSiteID:siteID dispatcher:[self defaultDispatcherWithPiwikURL:baseURL]];
+
+  return [self sharedInstanceWithSiteID:siteID dispatcher:[self defaultDispatcherWithPiwikURL:baseURL lastPathComponent:lastPathComponent]];
 }
 
 
-+ (id<PiwikDispatcher>)defaultDispatcherWithPiwikURL:(NSURL*)piwikURL {
-  
-  NSURL *endpoint = [[NSURL alloc] initWithString:@"piwik.php" relativeToURL:piwikURL];
-  
++ (id<PiwikDispatcher>)defaultDispatcherWithPiwikURL:(NSURL*)piwikURL lastPathComponent:(NSString*)lastPathComponent {
+
+  NSURL *endpoint = [[NSURL alloc] initWithString:lastPathComponent relativeToURL:piwikURL];
+
   // Instantiate dispatchers in priority order
   if (NSClassFromString(@"PiwikAFNetworking2Dispatcher")) {
     return [[NSClassFromString(@"PiwikAFNetworking2Dispatcher") alloc] initWithPiwikURL:endpoint];
@@ -246,7 +244,7 @@ static PiwikTracker *_sharedInstance;
   } else {
     return [[PiwikNSURLSessionDispatcher alloc] initWithPiwikURL:endpoint];
   }
-  
+
 }
 
 
